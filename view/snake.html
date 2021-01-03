@@ -1,0 +1,118 @@
+<html>
+<head>
+<title>Snake Game</title>
+<style>
+	body           {padding: 0px; margin: 0px; text-align: center; font-family: Arial;
+					background-color: rgba(1,1,1,0.9);}
+	h3             {padding: 1px; margin: 2px;}
+	#jsRequiredMsg {padding: 3px; margin: 3px; font-weight: bold; background: #faa;}
+	#controls      {padding: 2px; width: 500px; margin: 0 auto; margin-top: 65px;}
+	#controls *    {margin-left: 2px; margin-right: 2px;}
+	#view          {position: relative; padding: 1px; margin-top: 30px;}
+	#img           {background: #000; border: 3px double white;}
+	#errMsg        {visibility: hidden; position: absolute; top: 10px; right: 0px; width: 100%; color: #ff3030;
+					font-weight: bold;}
+	#footer        {font-size: 90%; font-style: italic; width: 500px; margin: 0 auto; margin-top: 20px;}
+	#newGame	   {font-family: "Showcard Gothic"; font-size: large; background: aquamarine; float: left;
+					border: 3px double white;}
+	#score		   {font-family: "Showcard Gothic"; font-size: large; background: aquamarine; float: right;
+					border: 3px double white; padding-left: 8px; padding-right: 8px}
+	#maxScore	   {font-family: "Showcard Gothic"; font-size: large; background: aquamarine; float: right;
+					border: 3px double white; padding-left: 8px; padding-right: 8px}
+	#source 	   {font-size: xx-small; float: right;}
+</style>
+</head>
+
+<body>
+
+<noscript>
+	<div id="jsRequiredMsg">
+		Your web browser must have JavaScript enabled in order for this page to display correctly!
+	</div>
+</noscript>
+
+<h3></h3>
+
+<div id="controls">
+	<select id="fps" title="View refresh rate in Frames Per Second">
+		<option value="33">30</option>
+		<option value="40">25</option>
+		<option value="50" selected>20</option>
+		<option value="66">15</option>
+		<option value="100">10</option>
+		<option value="143">7</option>
+		<option value="200">5</option>
+		<option value="500">2</option>
+		<option value="1000">1</option>
+	</select>
+
+	<button id="newGame" onclick="newGame()" title="Starts a new game">New Game</button>
+	<a id="maxScore">Max Score: 0</a>
+	<a id="score">Score: 0</a>
+
+</div>
+
+<div id="view">
+	<img id="img" width="{{.Width}}" height="{{.Height}}"
+		onload="errMsg.style.visibility = 'hidden'"
+		onerror="errMsg.style.visibility = 'visible'"/>
+	<div id="errMsg">Connection Error or Application Closed!</div>
+</div>
+
+<div id="footer">
+	<a id="source" href="https://github.com/uritrejo/SnakeGameGOLANG" target="_blank" align="right">Source</a>
+</div>
+
+<script>
+	// HTML elements:
+	var img            = document.getElementById("img"),
+		errMsg         = document.getElementById("errMsg"),
+		fps            = document.getElementById("fps");
+		score          = document.getElementById("score");
+		maxScore       = document.getElementById("maxScore");
+	
+	// Disable image dragging and right-click context menu:
+	img.oncontextmenu = img.ondragstart = function() { return false; }
+
+	fps.style.visibility = "hidden";
+
+	// Kick-off:
+	refreshImg();
+	refreshScore();
+
+	function refreshImg() {
+		// we update the image
+		img.src = "/img?&t=" + new Date().getTime();
+		setTimeout(refreshImg, fps.value);
+	}
+
+	function refreshScore(){
+		var r = new XMLHttpRequest();
+		r.open("POST", "/score", true);
+		r.send(null)
+		r.onload = function() {
+			// we get the values of the score and the max score
+			var indexMax = this.responseText.indexOf("&");
+			score.textContent = "Score: " + this.responseText.substring(0, indexMax);
+			maxScore.textContent = "Max: " + this.responseText.substring(indexMax+1, this.responseText.length);
+		}
+		setTimeout(refreshScore, 1000);
+	}
+
+	document.onkeydown = function (e) {
+		var r = new XMLHttpRequest();
+		r.open("GET", "/keyPressed?code=" + e.key + "&t=" + new Date().getTime(), true);
+		r.send(null);
+	};
+
+	function newGame() {
+		var r = new XMLHttpRequest();
+		r.open("GET", "/new?t=" + new Date().getTime(), true);
+		r.send(null);
+		// refresh the image
+		img.src = "/img?&t=" + new Date().getTime();
+	}
+</script>
+
+</body>
+</html>
